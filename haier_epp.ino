@@ -161,11 +161,12 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     //check sum
     if (!(Serial.available() > 0 && Serial.read() == sum)) goto error;
   }
+  //clear serial
   while(Serial.available()> 0)  Serial.read();
   //Serial.println("OK");
   return OK;
 error:
-  //read all
+  //clear serial
   while(Serial.available()> 0)  Serial.read();
   return READ_ERROR;
 }
