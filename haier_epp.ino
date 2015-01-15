@@ -58,7 +58,7 @@ int process(){
   frameHdr fhdr;
   uint8_t *pdata;
   frameRead(&fhdr, pdata);
-  //praseFrame(data);
+  praseFrame(&fhdr, pdata);
   frameFree(pdata);
 }
 
@@ -69,7 +69,8 @@ int sendCommand(void)
 
 int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
 {
-  uint8_t len = data_len + ADDR_LEN + 1; 
+  //type 1 byte sum 1 byte, so 1+1 = 2
+  uint8_t len = data_len + ADDR_LEN + 2; 
   uint8_t sum = 0;
   //header
   Serial.write(0xff);
@@ -98,10 +99,14 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
 
 int praseFrame(struct frameHdr *f, uint8_t *data)
 {
+  //Serial.println(f->type);
   switch (f->type) {
   case UART_CMD_GET_VER:
+    Serial.println("GET VER");
+    //frameWrite(
     break;
   case UART_CMD_GETTYPEID:
+    Serial.println("GET TYPE");
     break;
   }
 }
@@ -113,11 +118,11 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     //check head
     if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
     if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
+    //read len
     if (!(Serial.available() > 0 )) goto error;
-
     d->len = Serial.read();
     if (d->len < ADDR_LEN + 1) goto error;
-    d->data_len = d->len - (ADDR_LEN + 1);
+    d->data_len = d->len - (ADDR_LEN + 2);
     //Serial.println(d->len, HEX);
 
     if (d->data_len > 0 ) {
@@ -139,10 +144,16 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
       i++;
     }
     if (i != ADDR_LEN) goto error;
+    
+    //read type
+    if (!(Serial.available() > 0 )) goto error;
+    d->type = Serial.read();
+    sum += d->type;
+    
     i = 0;
-
     while(Serial.available() > 0 && i < d->data_len ) {
       data[i] = Serial.read();
+      //Serial.println(data[i], HEX);
       sum += data[i] ;
       i++;
     }
@@ -151,6 +162,7 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     if (!(Serial.available() > 0 && Serial.read() == sum)) goto error;
   }
   while(Serial.available()> 0)  Serial.read();
+  //Serial.println("OK");
   return OK;
 error:
   //read all
@@ -162,6 +174,7 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
+
 
 
 
