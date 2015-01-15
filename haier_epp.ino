@@ -31,14 +31,18 @@
 //===============================================
 #define HEAD_MG                                0xffff
 #define CHECK_ERROR                            -1
+#define READ_ERROR                             -1
+#define OK                                     0
+//===============================================
+#define ADDR_LEN                               6
 
-typedef struct f{
-  uint16_t    head;
+typedef struct frameHdr{
   uint8_t     len;
-  uint8_t     addr[6];
+  uint8_t     data_len;
+  uint64_t    addr;
   uint8_t     type;
 }
-frameInfo, *pframeInfo;
+frameHdr;
 
 void setup() {
   //  Set cm baud rate:
@@ -46,8 +50,16 @@ void setup() {
 }
 
 void loop(){
-  frameInfo a;
-  pframeInfo b;
+  process();
+  delay(2000);
+}
+
+int process(){
+  frameHdr fhdr;
+  uint8_t *pdata;
+  frameRead(&fhdr, pdata);
+  //praseFrame(data);
+  frameFree(pdata);
 }
 
 int sendCommand(void)
@@ -55,26 +67,73 @@ int sendCommand(void)
   return 1;
 }
 
-int praseFrame(uint8_t *data)
-{
-  if (!checkFrame(data))
-    return CHECK_ERROR;
+int frameRead(struct frameHdr *d, uint8_t *data) {
+  int i = 0;
+  uint8_t sum = 0;
+  if (Serial.available() > 0) {
+    //check head
+    if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
+    if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
+    if (!(Serial.available() > 0 )) goto error;
+
+    d->len = Serial.read();
+    if (d->len < ADDR_LEN + 1) goto error;
+    d->data_len = d->len - (ADDR_LEN + 1);
+    //Serial.println(d->len, HEX);
+
+    if (d->data_len > 0 ) {
+      data = (uint8_t *) malloc(d->data_len);
+      if (data == NULL) goto error;
+    } 
+    else {
+      data = NULL;
+    }
+
+    i = 0;
+    sum = 0;
+    sum += d->len;
+    while(Serial.available() > 0 && i < ADDR_LEN) {
+      uint8_t r = Serial.read();
+      ((uint8_t *)(&d->addr))[i] = r;
+      //Serial.println(data[i], HEX);
+      sum += r;
+      i++;
+    }
+    if (i != ADDR_LEN) goto error;
+    i = 0;
+
+    while(Serial.available() > 0 && i < d->data_len ) {
+      data[i] = Serial.read();
+      sum += data[i] ;
+      i++;
+    }
+    //Serial.println(sum, HEX);
+    //check sum
+    if (!(Serial.available() > 0 && Serial.read() == sum)) goto error;
+  }
+  while(Serial.available()> 0)  Serial.read();
+  return OK;
+error:
+  //read all
+  while(Serial.available()> 0)  Serial.read();
+  return READ_ERROR;
 }
 
-int checkFrame(uint8_t *data)
+void frameFree(uint8_t *d)
 {
-  pframeInfo fi = (pframeInfo)data;
-  //check head
-  if (fi->head != HEAD_MG)
-    return CHECK_ERROR;
-  //check sum;
-  uint8_t sum = 0;
-  for (int i = 0; i< fi->len;) {
-    sum += *(&(fi->len) + i);
-  }
-  if (*(&(fi->len) + fi->len-1) != sum) {
-    return CHECK_ERROR;
-  }
-  return 0;
+  if (!d) free(d);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
