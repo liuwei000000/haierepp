@@ -67,6 +67,45 @@ int sendCommand(void)
   return 1;
 }
 
+int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
+{
+  uint8_t len = data_len + ADDR_LEN + 1; 
+  uint8_t sum = 0;
+  //header
+  Serial.write(0xff);
+  Serial.write(0xff);
+  //----- len -----------
+  Serial.write(len);
+  sum += data_len;
+  //----- addr -----------
+  for (int i = 0 ; i < ADDR_LEN; i++)
+  {
+    sum += ((uint8_t *)(&addr))[i];
+    Serial.write(((uint8_t *)(&addr))[i]);
+  }
+  //----- type ----------
+  Serial.write(type);
+  sum += type;
+  //------ data ------   
+  for (int i = 0 ; i < data_len; i++)
+  {
+    sum += data[i];
+    Serial.write(data[i]);
+  }
+  //------  check sum --------
+  Serial.write(sum);  
+}
+
+int praseFrame(struct frameHdr *f, uint8_t *data)
+{
+  switch (f->type) {
+  case UART_CMD_GET_VER:
+    break;
+  case UART_CMD_GETTYPEID:
+    break;
+  }
+}
+
 int frameRead(struct frameHdr *d, uint8_t *data) {
   int i = 0;
   uint8_t sum = 0;
@@ -123,6 +162,10 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
+
+
+
+
 
 
 
