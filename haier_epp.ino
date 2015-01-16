@@ -121,7 +121,7 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     //read len
     if (!(Serial.available() > 0 )) goto error;
     d->len = Serial.read();
-    if (d->len < ADDR_LEN + 1) goto error;
+    if (d->len < ADDR_LEN + 2) goto error;
     d->data_len = d->len - (ADDR_LEN + 2);
     //Serial.println(d->len, HEX);
 
