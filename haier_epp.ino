@@ -57,6 +57,7 @@ void loop(){
 int process(){
   frameHdr fhdr;
   uint8_t *pdata;
+  
   frameRead(&fhdr, pdata);
   praseFrame(&fhdr, pdata);
   frameFree(pdata);
@@ -77,13 +78,14 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
   Serial.write(0xff);
   //----- len -----------
   Serial.write(len);
-  sum += data_len;
+  sum += len;
   //----- addr -----------
   for (int i = 0 ; i < ADDR_LEN; i++)
   {
     sum += ((uint8_t *)(&addr))[i];
     Serial.write(((uint8_t *)(&addr))[i]);
   }
+
   //----- type ----------
   Serial.write(type);
   sum += type;
@@ -94,20 +96,51 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
     Serial.write(data[i]);
   }
   //------  check sum --------
-  Serial.write(sum);  
+  Serial.write(sum); 
 }
+
+
+uint8_t gVerBuf[19]  = {0x45, 0x2B, 0x2B, 0x32, 0x2E, 0x31, 0x35, 
+					    0x00, 0x31, 0x34, 0x30, 0x36, 0x32, 0x38, 
+					    0x30, 0x31, 0x00, 0x00, 0x00};
+uint8_t gTypeBuf[32] = {0x11, 0x1C, 0x12, 0x00, 0x24, 0x00, 0x08, 
+					    0x10, 0x06, 0x05, 0x00, 0x41, 0x80, 0x01, 
+					    0x30, 0x31, 0x00, 0x00, 0x00, 0x06, 0x05, 
+						0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+					    0x00, 0x00, 0x00, 0x00};
+uint8_t gSoftBuf[2]  = {0x00, 0x00};
 
 int praseFrame(struct frameHdr *f, uint8_t *data)
 {
   //Serial.println(f->type);
-  switch (f->type) {
-  case UART_CMD_GET_VER:
+  uint8_t len = 0;
+  uint8_t *buf = NULL;
+  uint8_t type = UART_CMD_SETINTO_CONFIGMODE;
+  
+switch (f->type) {
+case UART_CMD_GET_VER:
     Serial.println("GET VER");
-    //frameWrite(
+    len = 19;
+	buf = gVerBuf;
+	//frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr);
+	frameWrite(UART_CMD_GET_VER_ACK, buf, len, f->addr);
     break;
   case UART_CMD_GETTYPEID:
     Serial.println("GET TYPE");
+    len = 32;
+	buf = gTypeBuf;
+	frameWrite(UART_CMD_GETTYPEIDACK, buf, len, f->addr);
+
+	/* auto send softap */
+	Serial.println("Soft Ap");
+	len = 2;
+	buf = gSoftBuf;
+	frameWrite(type, buf, len, f->addr);
     break;
+  default :
+    //Serial.write(f->type);
+    Serial.println("WRONG TYPE");
+    break;  
   }
 }
 
@@ -175,22 +208,4 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
