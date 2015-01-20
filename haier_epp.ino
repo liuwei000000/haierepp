@@ -57,10 +57,13 @@ void loop(){
 int process(){
   frameHdr fhdr;
   uint8_t *pdata;
+  int8_t ret = OK;  
   
-  frameRead(&fhdr, pdata);
-  praseFrame(&fhdr, pdata);
-  frameFree(pdata);
+  ret = frameRead(&fhdr, pdata);
+  if (OK == ret) {
+      praseFrame(&fhdr, pdata);
+      frameFree(pdata);
+  }  
 }
 
 int sendCommand(void)
@@ -99,47 +102,75 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
   Serial.write(sum); 
 }
 
+uint8_t gCheckFlag = 0;
 
-uint8_t gVerBuf[19]  = {0x45, 0x2B, 0x2B, 0x32, 0x2E, 0x31, 0x35, 
+/* UART_CMD_GET_VER(61) <===> UART_CMD_GET_VER_ACK(62) */
+uint8_t gVerBuf[19]  = {0x45, 0x2B, 0x2B, 0x31, 0x2E, 0x31, 0x35, 
 					    0x00, 0x31, 0x34, 0x30, 0x36, 0x32, 0x38, 
 					    0x30, 0x31, 0x00, 0x00, 0x00};
+/* UART_CMD_GETTYPEID(70) <===>  UART_CMD_GETTYPEIDACK(71) */
 uint8_t gTypeBuf[32] = {0x11, 0x1C, 0x12, 0x00, 0x24, 0x00, 0x08, 
 					    0x10, 0x06, 0x05, 0x00, 0x41, 0x80, 0x01, 
-					    0x30, 0x31, 0x00, 0x00, 0x00, 0x06, 0x05, 
-						0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+                        0x84, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+						0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
 					    0x00, 0x00, 0x00, 0x00};
-uint8_t gSoftBuf[2]  = {0x00, 0x00};
+
+/* UART_CMD_SETINTO_CONFIGMODE(F2) */
+uint8_t gSoftBuf[2]   = {0x00, 0x02};
+#if 0
+/* UART_CMD_SET_INTERVAL(7C) <===> UART_CMD_SET_INTERVAL_ACK(7D) */
+uint8_t gInterBuf1[2] = {0x00, 0x00};
+uint8_t gInterBuf2[2] = {0x00, 0x0A};
+/* UART_CMD_CTRL(01) <===> UART_CMD_STATUS(02) */
+uint8_t gCtrlBuf[62] = {0x6D, 0x01, 0x00, 0x41, 0x00, 0x2A, 0x00,
+                      0x0B, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
+      				  0x00, 0x64, 0x50, 0x00, 0x00, 0x41, 0x41, 
+      				  0x00, 0x00, 0x00, 0x4A, 0x0A, 0x30, 0x40, 
+                      0x00, 0x4B, 0x40, 0x00, 0x00, 0x40, 0x00, 
+                      0x00, 0x40, 0x00, 0x00, 0x40, 0x00, 0x00, 
+                      0x18, 0x11, 0x80, 0x00, 0x00, 0x00, 0x00, 
+                      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+      				  0x80, 0x00, 0x06, 0x00, 0x00, 0x10};
+/* UART_CMD_SETINTO_WORKMODE(F4) */
+#endif
 
 int praseFrame(struct frameHdr *f, uint8_t *data)
 {
   //Serial.println(f->type);
   uint8_t len = 0;
   uint8_t *buf = NULL;
-  uint8_t type = UART_CMD_SETINTO_CONFIGMODE;
   
 switch (f->type) {
-case UART_CMD_GET_VER:
+  case 0:
+    break;
+  case UART_CMD_GET_VER:
     Serial.println("GET VER");
     len = 19;
 	buf = gVerBuf;
-	//frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr);
 	frameWrite(UART_CMD_GET_VER_ACK, buf, len, f->addr);
+    break;
+  case UART_CMD_SET_CODE:
+    Serial.println("SET CODE");
+    len = 0;
+    buf = NULL;
+	frameWrite(UART_CMD_ACK, buf, len, f->addr);
     break;
   case UART_CMD_GETTYPEID:
     Serial.println("GET TYPE");
     len = 32;
 	buf = gTypeBuf;
+    if (gCheckFlag == 0) {
+        Serial.println("Soft Ap");
+        len = 2;
+        buf = gSoftBuf;
+        frameWrite(UART_CMD_SETINTO_CONFIGMODE, buf, len, f->addr);
+        gCheckFlag = 1;
+    }
 	frameWrite(UART_CMD_GETTYPEIDACK, buf, len, f->addr);
-
-	/* auto send softap */
-	Serial.println("Soft Ap");
-	len = 2;
-	buf = gSoftBuf;
-	frameWrite(type, buf, len, f->addr);
     break;
   default :
-    //Serial.write(f->type);
-    Serial.println("WRONG TYPE");
+    Serial.print("Wrong Type:");
+    Serial.println(f->type,HEX);
     break;  
   }
 }
@@ -148,6 +179,7 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
   int i = 0;
   uint8_t sum = 0;
   if (Serial.available() > 0) {
+    //Serial.println("frameRead 111 ");
     //check head
     if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
     if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
@@ -181,6 +213,9 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     //read type
     if (!(Serial.available() > 0 )) goto error;
     d->type = Serial.read();
+    //Serial.print("Msg Type:");
+    //Serial.println(d->type,HEX);
+
     sum += d->type;
     
     i = 0;
@@ -200,6 +235,7 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
   return OK;
 error:
   //clear serial
+  Serial.println("READ_ERROR");
   while(Serial.available()> 0)  Serial.read();
   return READ_ERROR;
 }
@@ -208,4 +244,3 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
-
