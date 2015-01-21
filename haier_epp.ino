@@ -103,6 +103,8 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
 }
 
 uint8_t gCheckFlag = 0;
+uint64_t gAddr = 0;
+
 
 /* UART_CMD_GET_VER(61) <===> UART_CMD_GET_VER_ACK(62) */
 uint8_t gVerBuf[19]  = {0x45, 0x2B, 0x2B, 0x31, 0x2E, 0x31, 0x35, 
@@ -159,6 +161,8 @@ switch (f->type) {
     Serial.println("GET TYPE");
     len = 32;
 	buf = gTypeBuf;
+	frameWrite(UART_CMD_GETTYPEIDACK, buf, len, f->addr);
+#if 0
     if (gCheckFlag == 0) {
         Serial.println("Soft Ap");
         len = 2;
@@ -166,7 +170,7 @@ switch (f->type) {
         frameWrite(UART_CMD_SETINTO_CONFIGMODE, buf, len, f->addr);
         gCheckFlag = 1;
     }
-	frameWrite(UART_CMD_GETTYPEIDACK, buf, len, f->addr);
+#endif
     break;
   default :
     Serial.print("Wrong Type:");
@@ -178,11 +182,38 @@ switch (f->type) {
 int frameRead(struct frameHdr *d, uint8_t *data) {
   int i = 0;
   uint8_t sum = 0;
+  uint8_t len = 0;
+  uint8_t *buf = NULL;
+  int val = 0;
+  
   if (Serial.available() > 0) {
-    //Serial.println("frameRead 111 ");
+    Serial.println("frameRead 111 ");
+    /* check configure mode */
+    val = Serial.read();
+    if (val == 'a'){
+        Serial.println("frameRead 222 ");
+        if ((Serial.available() > 0)&&(Serial.read() == 'a')) {
+            Serial.println("frameRead 333 ");
+            if (gCheckFlag == 0) {
+                Serial.println("Soft Ap");
+                len = 2;
+                buf = gSoftBuf;
+                frameWrite(UART_CMD_SETINTO_CONFIGMODE, buf, len, gAddr);
+                gCheckFlag = 1;
+            }
+        }
+        Serial.println("frameRead 444 ");
+        goto error;
+    }
+    
     //check head
-    if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
-    if (!(Serial.available() > 0 && Serial.read() == 0xff)) goto error;
+    Serial.println("frameRead 555 ");
+    if (!(Serial.available() > 0 && val == 0xff)) {
+        Serial.println("frameRead 666 ");
+        goto error;
+    }   
+    if (!(Serial.available() > 0 && Serial.read() == 0xff)) 
+        goto error;
     //read len
     if (!(Serial.available() > 0 )) goto error;
     d->len = Serial.read();
@@ -204,7 +235,9 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     while(Serial.available() > 0 && i < ADDR_LEN) {
       uint8_t r = Serial.read();
       ((uint8_t *)(&d->addr))[i] = r;
+      //((uint8_t *)(&gAddr))[i] = r;
       //Serial.println(data[i], HEX);
+      //Serial.println(gAddr[i], HEX);
       sum += r;
       i++;
     }
@@ -244,3 +277,4 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
+
