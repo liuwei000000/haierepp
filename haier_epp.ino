@@ -36,7 +36,10 @@
 //===============================================
 #define ADDR_LEN                               6
 //==============================================
-#define SET_CONF_DELAY_MS                      8000                         
+#define SET_CONF_DELAY_MS                      8000        
+
+#define DEBUG_PRINT                            Serial.println
+//#define DEBUG_PRINT                                //
 
 
 typedef struct frameHdr{
@@ -49,7 +52,6 @@ frameHdr;
 
 volatile unsigned long time = 0;
 uint64_t gAddr = 0;
-
 
 /* UART_CMD_GET_VER(61) <===> UART_CMD_GET_VER_ACK(62) */
 uint8_t gVerBuf[19]  = {
@@ -65,15 +67,13 @@ uint8_t gTypeBuf[32] = {
   0x00, 0x00, 0x00, 0x00};
 
 /* UART_CMD_SETINTO_CONFIGMODE(F2) */
-uint8_t gSoftBuf[2]   = {
-  0x00, 0x02};
-#if 0
-/* UART_CMD_SET_INTERVAL(7C) <===> UART_CMD_SET_INTERVAL_ACK(7D) */
-uint8_t gInterBuf1[2] = {
+uint8_t gSoftAp[]   = {
   0x00, 0x00};
-uint8_t gInterBuf2[2] = {
-  0x00, 0x0A};
-/* UART_CMD_CTRL(01) <===> UART_CMD_STATUS(02) */
+uint8_t gWPS[]   = {
+  0x00, 0x01};
+uint8_t gSmartLink[]   = {
+  0x00, 0x02};
+
 uint8_t gCtrlBuf[62] = {
   0x6D, 0x01, 0x00, 0x41, 0x00, 0x2A, 0x00,
   0x0B, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
@@ -84,25 +84,23 @@ uint8_t gCtrlBuf[62] = {
   0x18, 0x11, 0x80, 0x00, 0x00, 0x00, 0x00, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
   0x80, 0x00, 0x06, 0x00, 0x00, 0x10};
+#if 0
+/* UART_CMD_SET_INTERVAL(7C) <===> UART_CMD_SET_INTERVAL_ACK(7D) */
+uint8_t gInterBuf1[2] = {
+  0x00, 0x00};
+uint8_t gInterBuf2[2] = {
+  0x00, 0x0A};
+/* UART_CMD_CTRL(01) <===> UART_CMD_STATUS(02) */
 /* UART_CMD_SETINTO_WORKMODE(F4) */
 #endif
 
-void debug(int num)
-{
-  Serial.print("Msg:");
-  Serial.println(num);
-}
-
 void smartlink()
 {
-  volatile  uint8_t len = 2;
-  volatile  uint8_t *buf = gSoftBuf;
   volatile  unsigned long t = millis();
-  ;
   //delay
   if (t > time + SET_CONF_DELAY_MS) {
     time = t;
-    frameWrite(UART_CMD_SETINTO_CONFIGMODE, (uint8_t *)buf, (uint8_t)len, gAddr);
+    frameWrite(UART_CMD_SETINTO_CONFIGMODE, gSmartLink, sizeof(gSmartLink), gAddr);
   }
 }
 
@@ -164,43 +162,37 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
 
 int praseFrame(struct frameHdr *f, uint8_t *data)
 {
-  //Serial.println(f->type);
+  //Serial.DEBUG_PRINT(f->type);
   uint8_t len = 0;
   uint8_t *buf = NULL;
 
   switch (f->type) {
-  case 0:
-    break;
   case UART_CMD_GET_VER:
-    Serial.println("GET VER");
-    len = 19;
-    buf = gVerBuf;
-    frameWrite(UART_CMD_GET_VER_ACK, buf, len, f->addr);
+    DEBUG_PRINT("GET VER");
+    frameWrite(UART_CMD_GET_VER_ACK, gVerBuf, sizeof(gVerBuf), f->addr);
     break;
   case UART_CMD_SET_CODE:
-    Serial.println("SET CODE");
-    len = 0;
-    buf = NULL;
-    frameWrite(UART_CMD_ACK, buf, len, f->addr);
+    DEBUG_PRINT("SET CODE");
+    frameWrite(UART_CMD_ACK, NULL, 0, f->addr);
     break;
   case UART_CMD_GETTYPEID:
-    Serial.println("GET TYPE");
-    len = 32;
-    buf = gTypeBuf;
-    frameWrite(UART_CMD_GETTYPEIDACK, buf, len, f->addr);
-#if 0
-    if (gCheckFlag == 0) {
-      Serial.println("Soft Ap");
-      len = 2;
-      buf = gSoftBuf;
-      frameWrite(UART_CMD_SETINTO_CONFIGMODE, buf, len, f->addr);
-      gCheckFlag = 1;
-    }
-#endif
+    DEBUG_PRINT("GET TYPE");
+    frameWrite(UART_CMD_GETTYPEIDACK, gTypeBuf, sizeof(gTypeBuf), f->addr);
+    break;
+  case UART_CMD_RPT_NET_STATUS:
+    DEBUG_PRINT("NET STATUS");
+    frameWrite(UART_CMD_ACK, NULL, 0, f->addr);
+    break;
+  case UART_CMD_CTRL:  
+    DEBUG_PRINT("GET  CTL");
+    frameWrite(UART_CMD_STATUS, gCtrlBuf, sizeof(gCtrlBuf), f->addr);
+    delay(500);
+    frameWrite(UART_CMD_REPORT, gCtrlBuf, sizeof(gCtrlBuf), f->addr);
     break;
   default :
-    Serial.print("Wrong Type:");
-    Serial.println(f->type,HEX);
+    DEBUG_PRINT("UnDo Type:");
+    DEBUG_PRINT(f->type,HEX);
+    frameWrite(UART_CMD_ACK, NULL, 0, f->addr);
     break;  
   }
 }
@@ -210,43 +202,30 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
   uint8_t sum = 0;
   uint8_t len = 0;
   uint8_t *buf = NULL;
-  int val = 0;
+  uint8_t  val = 0; 
 
   if (Serial.available() > 0) {
-    //Serial.println("frameRead 111 ");
-    /* check configure mode */
+    //check head
     val = Serial.read();
-#if 0    
-    if (val == 'a'){
-      Serial.println("frameRead 222 ");
-      if ((Serial.available() > 0)&&(Serial.read() == 'a')) {
-        Serial.println("frameRead 333 ");
-        if (gCheckFlag == 0) {
-          Serial.println("Soft Ap");
-          len = 2;
-          buf = gSoftBuf;
-          frameWrite(UART_CMD_SETINTO_CONFIGMODE, buf, len, gAddr);
-          gCheckFlag = 1;
-        }
-      }
-      Serial.println("frameRead 444 ");
+    if (!(Serial.available() > 0 && val == 0xff)) {
+      DEBUG_PRINT("head 1 error");
+      DEBUG_PRINT(val, HEX);
+      while(Serial.available()> 0)DEBUG_PRINT(Serial.read(), HEX);
       goto error;
     }
-#endif    
-    //check head
-    //Serial.println("frameRead 555 ");
-    if (!(Serial.available() > 0 && val == 0xff)) {
-      //Serial.println("frameRead 666 ");
+    val = Serial.read();
+    if (!(Serial.available() > 0 && val == 0xff))  {
+      DEBUG_PRINT("head 2 error");
+      DEBUG_PRINT(val, HEX);
+      while(Serial.available()> 0)DEBUG_PRINT(Serial.read(), HEX);
       goto error;
-    }   
-    if (!(Serial.available() > 0 && Serial.read() == 0xff)) 
-      goto error;
+    }
     //read len
     if (!(Serial.available() > 0 )) goto error;
     d->len = Serial.read();
     if (d->len < ADDR_LEN + 2) goto error;
     d->data_len = d->len - (ADDR_LEN + 2);
-    //Serial.println(d->len, HEX);
+    //Serial.DEBUG_PRINT(d->len, HEX);
 
     if (d->data_len > 0 ) {
       data = (uint8_t *) malloc(d->data_len);
@@ -262,40 +241,37 @@ int frameRead(struct frameHdr *d, uint8_t *data) {
     while(Serial.available() > 0 && i < ADDR_LEN) {
       uint8_t r = Serial.read();
       ((uint8_t *)(&d->addr))[i] = r;
-      //Serial.println(data[i], HEX);
-      //Serial.println(gAddr[i], HEX);
       sum += r;
       i++;
     }
     if (i != ADDR_LEN) goto error;
-
     //read type
     if (!(Serial.available() > 0 )) goto error;
     d->type = Serial.read();
     //Serial.print("Msg Type:");
-    //Serial.println(d->type,HEX);
-
+    //Serial.DEBUG_PRINT(d->type,HEX);
     sum += d->type;
-
     i = 0;
     while(Serial.available() > 0 && i < d->data_len ) {
       data[i] = Serial.read();
-      //Serial.println(data[i], HEX);
+      //Serial.DEBUG_PRINT(data[i], HEX);
       sum += data[i] ;
       i++;
     }
-    //Serial.println(sum, HEX);
     //check sum
-    if (!(Serial.available() > 0 && Serial.read() == sum)) goto error;
+    if (!(Serial.available() > 0 && Serial.read() == sum)) {
+      DEBUG_PRINT("sum error");
+      goto error;
+    }
+    //clear serial
+    while(Serial.available()> 0)  Serial.read();
+    return OK;
   }
-  //clear serial
-  while(Serial.available()> 0)  Serial.read();
-  //Serial.println("OK");
-  return OK;
+  return READ_ERROR;
 error:
   //clear serial
   while(Serial.available()> 0)  Serial.read();
-  Serial.println("READ_ERROR");
+  DEBUG_PRINT(" ERROR");
   return READ_ERROR;
 }
 
@@ -303,5 +279,11 @@ void frameFree(uint8_t *d)
 {
   if (!d) free(d);
 }
+
+
+
+
+
+
 
 
