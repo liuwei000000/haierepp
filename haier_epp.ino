@@ -41,7 +41,6 @@
 #define DEBUG_PRINT                            Serial.println
 //#define DEBUG_PRINT                                //
 
-
 typedef struct frameHdr{
   uint8_t     len;
   uint8_t     data_len;
@@ -55,7 +54,7 @@ uint64_t gAddr = 0;
 
 /* UART_CMD_GET_VER(61) <===> UART_CMD_GET_VER_ACK(62) */
 uint8_t gVerBuf[19]  = {
-  0x45, 0x2B, 0x2B, 0x31, 0x2E, 0x31, 0x35, 
+  0x45, 0x2B, 0x2B, 0x32, 0x2E, 0x31, 0x35, 
   0x00, 0x31, 0x34, 0x30, 0x36, 0x32, 0x38, 
   0x30, 0x31, 0x00, 0x00, 0x00};
 /* UART_CMD_GETTYPEID(70) <===>  UART_CMD_GETTYPEIDACK(71) */
@@ -73,7 +72,6 @@ uint8_t gWPS[]   = {
   0x00, 0x01};
 uint8_t gSmartLink[]   = {
   0x00, 0x02};
-
 uint8_t gCtrlBuf[62] = {
   0x6D, 0x01, 0x00, 0x41, 0x00, 0x2A, 0x00,
   0x0B, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
@@ -145,7 +143,6 @@ int frameWrite(uint8_t type, uint8_t *data, uint8_t data_len, uint64_t addr)
     sum += ((uint8_t *)(&addr))[i];
     Serial.write(((uint8_t *)(&addr))[i]);
   }
-
   //----- type ----------
   Serial.write(type);
   sum += type;
