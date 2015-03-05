@@ -1,185 +1,169 @@
 <!doctype html>
 
 <html>
-  <head>
-  <title>甲醛检测仪</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-	<meta name="article" id="articlelink" content="/technology/javascript/20120823-gauge-justgage-js/" />
-    <meta name="viewport" content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0">
-    <style>
-      body {
-        text-align: center;
-		    font-family: Arial;
-      }
-      
-      #g1 {
-        width:300px; height:260px;
-        display: inline-block;
-        margin: 1em;
-		    border: 1px soild #202020;
-		    box-shadow: 0px 0px 15px #101010;
-		    margin-top: 20px;
-		    border-radius: 8px;
-      }
-	  
-	  #g2 {
-        width:120px; height:100px;
-        display: inline-block;
-        margin: 1em;
-		    border: 1px soild #202020;
-		    box-shadow: 0px 0px 15px #101010;
-		    margin-top: 20px;
-		    border-radius: 8px;
-      }
-	  
-	  #g3 {
-		    width:120px; height:100px;
-        display: inline-block;
-        margin: 1em;
-		    border: 1px soild #202020;
-		    box-shadow: 0px 0px 15px #101010;
-		    margin-top: 20px;
-		    border-radius: 8px;
-      }
-      
-      p {
-        display: block;
-        width: 400px;
-        margin: 2em auto;
-        text-align: center;
-		    border-top: 1px soild #CCC;
-		    border-bottom: 1px soild #CCC;
-		    background: #333333;
-		    padding:10px 0px;
-		    color: #CCC;
-		    text-shadow: 1px 1px 25px #000000;
-		    border-radius: 0px 0px 5px 5px;
-		    box-shadow: 0px 0px 10px #202020;
-      }
-    </style>
-    
-    <script src="js/raphael.2.1.0.min.js"></script>
-    <script src="js/justgage.1.0.1.min.js"></script>
-    <script>
-      var g1;
-	    var g2;
-	    var g3;
-      
-      window.onload = function(){
-        var g1 = new JustGage({
-          id: "g1", 
-          value:0.01, 
-          min: 0,
-          max: 0.11,
-          title: "甲醛含量",
-          label: "mg/M3",
-			levelColors: [
-			  "#FFFF66",
-			  "#ff5555",
-			  "#FFFF66"
-			]    
-        });
-	    var g2 = new JustGage({
-          id: "g2", 
-          value:28, 
-          min: -10,
-          max: 40,
-          title: "温度",
-          label: "C",
-			levelColors: [
-			  "#FFFF66",
-			  "#55ff55",
-			  "#669966"
-			]    
-        });
-		
+<head>
+<title>甲醛检测仪</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="arti" D:/haier_epp/html/test.htm"cle" id="articlelink"
+	content="/technology/javascript/20120823-gauge-justgage-js/" />
+<meta name="viewport"
+	content="width=device-width,minimum-scale=1.0,maximum-scale=1.0,initial-scale=1.0">
+<style>
+body {
+	text-align: center;
+	font-family: Arial;
+}
+
+#g1 {
+	width: 300px;
+	height: 260px;
+	display: inline-block;
+	margin: 1em;
+	border: 1px soild #202020;
+	box-shadow: 0px 0px 15px #101010;
+	margin-top: 20px;
+	border-radius: 8px;
+}
+
+#g2 {
+	width: 120px;
+	height: 100px;
+	display: inline-block;
+	margin: 1em;
+	border: 1px soild #202020;
+	box-shadow: 0px 0px 15px #101010;
+	margin-top: 20px;
+	border-radius: 8px;
+}
+
+#g3 {
+	width: 120px;
+	height: 100px;
+	display: inline-block;
+	margin: 1em;
+	border: 1px soild #202020;
+	box-shadow: 0px 0px 15px #101010;
+	margin-top: 20px;
+	border-radius: 8px;
+}
+
+p {
+	display: block;
+	width: 400px;
+	margin: 2em auto;
+	text-align: center;
+	border-top: 1px soild #CCC;
+	border-bottom: 1px soild #CCC;
+	background: #333333;
+	padding: 10px 0px;
+	color: #CCC;
+	text-shadow: 1px 1px 25px #000000;
+	border-radius: 0px 0px 5px 5px;
+	box-shadow: 0px 0px 10px #202020;
+}
+</style>
+
+<script src="js/raphael.2.1.0.min.js"></script>
+<script src="js/justgage.1.0.1.min.js"></script>
+<script>
+	var g1;
+	var g2;
+	var g3;
+
+	window.onload = function() {
+		var g1 = new JustGage({
+			id : "g1",
+			value : 0.01,
+			min : 0,
+			max : 0.11,
+			title : "甲醛含量",
+			label : "mg/M3",
+			levelColors : [ "#FFFF66", "#ff5555", "#FFFF66" ]
+		});
+		var g2 = new JustGage({
+			id : "g2",
+			value : 28,
+			min : -10,
+			max : 40,
+			title : "温度",
+			label : "C",
+			levelColors : [ "#FFFF66", "#55ff55", "#669966" ]
+		});
+
 		var g3 = new JustGage({
-          id: "g3", 
-          value:22, 
-          min: 0,
-          max: 100,
-          title: "湿度",
-          label: "%",
-			levelColors: [
-			  "#FFFF66",
-			  "#5555ff",
-			  "#66FF66"
-			]    
-     });
+			id : "g3",
+			value : 22,
+			min : 0,
+			max : 100,
+			title : "湿度",
+			label : "%",
+			levelColors : [ "#FFFF66", "#5555ff", "#66FF66" ]
+		});
 
-function Ajax(){
-//随便用用的ajax读取函数
-//Author: 扎俊
-//Email:men_779@126.com
-//Question: http://hi.baidu.com/men779/
- this.url=arguments[0]||"";
- this.callback=arguments[1]||callAjaxBack;
- this.method=arguments[2]||"GET";
-var xThis=this; 
- function callAjaxBack(){}
- var xmlHttp;
-  try{
-    // Firefox, Opera 8.0+, Safari
-  xmlHttp=new XMLHttpRequest();
-  }
-  catch (e){ 
-   // Internet Explorer
-    try
-    {
-    xmlHttp=new ActiveXObject("Msxml2.XMLHTTP");
-    }
-    catch (e){
- 
-    try
-    {
-    xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    catch (e){
-    alert("Some Error Detected!");
-    return null;
-    }
-    }
-  }
-   
-    xmlHttp.onreadystatechange=function()
-      {
-   if(xmlHttp.readyState==4)
-        {
-     xThis.callback(xmlHttp.responseText);
-     }
-      }
-    xmlHttp.open(this.method.toUpperCase(),this.url,false);
-    xmlHttp.send(null);
- } 
-      
+		function Ajax() {
+			//随便用用的ajax读取函数
+			this.url = arguments[0] || "";
+			this.callback = arguments[1] || callAjaxBack;
+			this.method = arguments[2] || "GET";
+			var xThis = this;
+			function callAjaxBack() {
+			}
+			var xmlHttp;
+			try {
+				// Firefox, Opera 8.0+, Safari
+				xmlHttp = new XMLHttpRequest();
+			} catch (e) {
+				// Internet Explorer
+				try {
+					xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+				} catch (e) {
 
-		function showTxtPre(txtData){
-		  var t=txtData.match(/-?\d+(\.\d+)?/g);//.replace(/\s+/g,'').replace(/\r\n/g,'').replace(/　　/g,'').substr(1,2000);
-		  //在上面这句最后的substr的参数里设定需要开始的位置和字数。
-		  //演示的是从1开始，取2000个除掉空白和换行外的字符。
-		  for (var i=0;i<t.length;i++) {
-		  	if (i == 0) {
-		  		g1.refresh(t[i]);
-		  	}
-		  	if (i == 1) {
-		  		g2.refresh(t[i]);
-		  	}
-		  	if (i == 2) {
-		  		g3.refresh(t[i]);
-		  	}
+					try {
+						xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+					} catch (e) {
+						alert("Some Error Detected!");
+						return null;
+					}
+				}
+			}
+
+			xmlHttp.onreadystatechange = function() {
+				if (xmlHttp.readyState == 4) {
+					xThis.callback(xmlHttp.responseText);
+				}
+			}
+			xmlHttp.open(this.method.toUpperCase(), this.url, false);
+			xmlHttp.send(null);
+		}
+
+		function showTxtPre(txtData) {
+			var t = txtData.match(/-?\d+(\.\d+)?/g);//.replace(/\s+/g,'').replace(/\r\n/g,'').replace(/　　/g,'').substr(1,2000);
+			//在上面这句最后的substr的参数里设定需要开始的位置和字数。
+			//演示的是从1开始，取2000个除掉空白和换行外的字符。
+			for ( var i = 0; i < t.length; i++) {
+				if (i == 0) {
+					g1.refresh(t[i]);
+				}
+				if (i == 1) {
+					g2.refresh(t[i]);
+				}
+				if (i == 2) {
+					g3.refresh(t[i]);
+				}
 			}
 		}
-      
-    setInterval(function() {
-    		Ajax("./123.txt",showTxtPre);
-          //g1.refresh(getRandomInt(80, 100));
-     }, 500);
-    };
-    </script>
-	</head>
-	<body>    
-		    <div id="g1"></div><br/>
-        <div id="g2"></div>
-        <div id="g3"></div>
-	</body>
+
+		setInterval(function() {
+			Ajax("./123.txt", showTxtPre);
+			//g1.refresh(getRandomInt(80, 100));
+		}, 500);
+	};
+</script>
+</head>
+<body>
+	<div id="g1"></div>
+	<br />
+	<div id="g2"></div>
+	<div id="g3"></div>
+</body>
 </html>

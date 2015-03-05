@@ -1,70 +1,63 @@
 <html>
 
-<head><meta http-equiv="Content-Type" content="text/html; charset=gb2312">
-</head><body>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+</head>
+<body>
 
-<div id="showTxt"></div>
-
-
-<script>
-function Ajax(){
-//随便用用的ajax读取函数
-//Author: 扎俊
-//Email:men_779@126.com
-//Question: http://hi.baidu.com/men779/
- this.url=arguments[0]||"";
- this.callback=arguments[1]||callAjaxBack;
- this.method=arguments[2]||"GET";
-var xThis=this; 
- function callAjaxBack(){}
- var xmlHttp;
-  try{
-    // Firefox, Opera 8.0+, Safari
-  xmlHttp=new XMLHttpRequest();
-  }
-  catch (e){ 
-   // Internet Explorer
-    try
-    {
-    xmlHttp=new ActiveXObject("Msxml2.XMLHTTP");
-    }
-    catch (e){
- 
-    try
-    {
-    xmlHttp=new ActiveXObject("Microsoft.XMLHTTP");
-    }
-    catch (e){
-    alert("Some Error Detected!");
-    return null;
-    }
-    }
-  }
-   
-    xmlHttp.onreadystatechange=function()
-      {
-   if(xmlHttp.readyState==4)
-        {
-     xThis.callback(xmlHttp.responseText);
-     }
-      }
-    xmlHttp.open(this.method.toUpperCase(),this.url,false);
-    xmlHttp.send(null);
- } 
-
-Ajax("./123.txt",showTxtPre);
+	<div id="showTxt"></div>
 
 
-function showTxtPre(txtData){
-  var t=txtData.match(/-?\d+(\.\d+)?/g);//.replace(/\s+/g,'').replace(/\r\n/g,'').replace(/　　/g,'').substr(1,2000);
-  //在上面这句最后的substr的参数里设定需要开始的位置和字数。
-  //演示的是从1开始，取2000个除掉空白和换行外的字符。
-  for (var i=0;i<t.length;i++) {
-  	document.getElementById("showTxt").innerHTML+=t[i] + "|";
-	}
-}
+	<script>
+		function Ajax() {
+			//随便用用的ajax读取函数
+			//Author: 扎俊
+			//Email:men_779@126.com
+			//Question: http://hi.baidu.com/men779/
+			this.url = arguments[0] || "";
+			this.callback = arguments[1] || callAjaxBack;
+			this.method = arguments[2] || "GET";
+			var xThis = this;
+			function callAjaxBack() {
+			}
+			var xmlHttp;
+			try {
+				// Firefox, Opera 8.0+, Safari
+				xmlHttp = new XMLHttpRequest();
+			} catch (e) {
+				// Internet Explorer
+				try {
+					xmlHttp = new ActiveXObject("Msxml2.XMLHTTP");
+				} catch (e) {
 
+					try {
+						xmlHttp = new ActiveXObject("Microsoft.XMLHTTP");
+					} catch (e) {
+						alert("Some Error Detected!");
+						return null;
+					}
+				}
+			}
 
-</script>
+			xmlHttp.onreadystatechange = function() {
+				if (xmlHttp.readyState == 4) {
+					xThis.callback(xmlHttp.responseText);
+				}
+			}
+			xmlHttp.open(this.method.toUpperCase(), this.url, false);
+			xmlHttp.send(null);
+		}
+
+		Ajax("./123.txt", showTxtPre);
+
+		function showTxtPre(txtData) {
+			var t = txtData.match(/-?\d+(\.\d+)?/g);//.replace(/\s+/g,'').replace(/\r\n/g,'').replace(/　　/g,'').substr(1,2000);
+			//在上面这句最后的substr的参数里设定需要开始的位置和字数。
+			//演示的是从1开始，取2000个除掉空白和换行外的字符。
+			for ( var i = 0; i < t.length; i++) {
+				document.getElementById("showTxt").innerHTML += t[i] + "|";
+			}
+		}
+	</script>
 </body>
 </html>
