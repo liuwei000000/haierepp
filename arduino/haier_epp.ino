@@ -183,8 +183,14 @@ int praseFrame(struct frameHdr *f, uint8_t *data)
   case UART_CMD_CTRL:  
     DEBUG_PRINT("GET  CTL");
     frameWrite(UART_CMD_STATUS, gCtrlBuf, sizeof(gCtrlBuf), f->addr);
-    delay(500);
-    frameWrite(UART_CMD_REPORT, gCtrlBuf, sizeof(gCtrlBuf), f->addr);
+    DEBUG_PRINT("DATA");
+    DEBUG_PRINT("Data Len:");
+    DEBUG_PRINT(f->data_len);
+    for ( int i = 0; i < f->data_len; i++) {
+         DEBUG_PRINT(data[i],HEX);
+    }
+    //delay(500);
+    //frameWrite(UART_CMD_REPORT, gCtrlBuf, sizeof(gCtrlBuf), f->addr);
     break;
   default :
     DEBUG_PRINT("UnDo Type:");
