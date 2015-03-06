@@ -141,13 +141,13 @@ p {
 			//演示的是从1开始，取2000个除掉空白和换行外的字符。
 			for ( var i = 0; i < t.length; i++) {
 				if (i == 0) {
-					g1.refresh(t[i]);
-				}
-				if (i == 1) {
 					g2.refresh(t[i]);
 				}
-				if (i == 2) {
+				if (i == 1) {
 					g3.refresh(t[i]);
+				}
+				if (i == 2) {
+					g1.refresh(t[i]/1000);
 				}
 			}
 		}
